@@ -5,19 +5,21 @@ import getFieldSetDetails from "@salesforce/apex/CTRL_SearchFilter.getFieldSetDe
 import { loadStyle } from "lightning/platformResourceLoader";
 import searchFilterCssOverwrite from "@salesforce/resourceUrl/LWC_SearchFilter_Overwrite";
 
-const numericTypes = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE"];
+const numericTypes = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "LONG"];
+const otherTypes = ["BOOLEAN", "EMAIL", "ID", "LOCATION", "MULTIPICKLIST", "PICKLIST", "REFERENCE", "STRING", "TEXTAREA", "URL"];
+
 const withoutQuotesFields = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "BOOLEAN"];
 
 const operatorOptions = [
   {
     operatorLabel: "égal",
     operatorSymbol: "=",
-    types: ["ALL"]
+    types: [...numericTypes, ...otherTypes.filter((type) => type !== "MULTIPICKLIST")]
   },
   {
     operatorLabel: "différent",
     operatorSymbol: "!=",
-    types: ["ALL"]
+    types: [...numericTypes, ...otherTypes.filter((type) => type !== "MULTIPICKLIST")]
   },
   {
     operatorLabel: "supérieur",
@@ -42,22 +44,33 @@ const operatorOptions = [
   {
     operatorLabel: "contient",
     operatorSymbol: "LIKE '%KEY%'",
-    types: ["STRING", "REFERENCE", "EMAIL"]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
   },
   {
     operatorLabel: "ne contient pas",
     operatorSymbol: "NOT LIKE '%KEY%'",
-    types: ["STRING", "REFERENCE", "EMAIL"]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
   },
   {
     operatorLabel: "commence par",
     operatorSymbol: "LIKE 'KEY%'",
-    types: ["STRING", "REFERENCE", "EMAIL"]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN"].includes(type))]
   },
   {
     operatorLabel: "ne commence pas par",
     operatorSymbol: "NOT LIKE 'KEY%'",
-    types: ["STRING", "REFERENCE", "EMAIL"]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN"].includes(type))]
+  }
+];
+
+const booleanOptions = [
+  {
+    label: "vrai",
+    value: "true"
+  },
+  {
+    label: "faux",
+    value: "false"
   }
 ];
 
@@ -70,18 +83,15 @@ export default class LWC_SearchFilter extends LightningElement {
   fieldSetToQueryName = "FieldsToQuery_FS";
 
   filterFieldSetDetails;
-
   fieldsToQuery;
-
   fieldOptions;
   operatorOptions;
   picklistOptions;
-
   selectedField;
   selectedOperator;
   value;
   selectedLogic = "AND";
-
+  booleanOptions = booleanOptions;
   filterRules = [];
   whereClauseRules = [];
 
@@ -97,15 +107,19 @@ export default class LWC_SearchFilter extends LightningElement {
       fieldSetName: this.fieldSetToQueryName
     });
     this.fieldsToQuery = this.fieldSetToQuery.map(({ apiName }) => apiName);
-    this.fieldOptions = this.filterFieldSetDetails.map(({ apiName }) => ({
-      label: apiName.replace(/__r|__c/g, "").replace(".", " > "),
+    this.fieldOptions = this.filterFieldSetDetails.map(({ apiName, label }) => ({
+      label,
       value: apiName
     }));
     this.fieldOptions.sort(({ label: label1 }, { label: label2 }) => {
-      if (label1 > label2) return -1;
-      else if (label1 < label2) return 1;
+      if (label1 > label2) return 1;
+      else if (label1 < label2) return -1;
       return 0;
     });
+  }
+
+  get filterRuleClass() {
+    return `filter__rule ${this.selectedFieldType === "MULTIPICKLIST" ? "multipicklist" : ""}`;
   }
 
   get inputsDisabled() {
@@ -113,23 +127,28 @@ export default class LWC_SearchFilter extends LightningElement {
   }
 
   get isPickListField() {
-    const selectedFieldType = this.getSelectedFieldType();
-    return selectedFieldType === "PICKLIST";
+    return this.selectedFieldType === "PICKLIST";
   }
 
   get isDateField() {
-    const selectedFieldType = this.getSelectedFieldType();
-    return selectedFieldType === "DATE";
+    return this.selectedFieldType === "DATE";
   }
 
   get isDateTimeField() {
-    const selectedFieldType = this.getSelectedFieldType();
-    return selectedFieldType === "DATETIME";
+    return this.selectedFieldType === "DATETIME";
   }
 
+  get isTimeField() {
+    return this.selectedFieldType === "TIME";
+  }
+  get isMultipicklistField() {
+    return this.selectedFieldType === "MULTIPICKLIST";
+  }
+  get isBooleanField() {
+    return this.selectedFieldType === "BOOLEAN";
+  }
   get isOtherFields() {
-    const selectedFieldType = this.getSelectedFieldType();
-    return !["PICKLIST", "DATE", "DATETIME"].includes(selectedFieldType);
+    return !["PICKLIST", "DATE", "DATETIME", "TIME", "MULTIPICKLIST", "BOOLEAN"].includes(this.selectedFieldType);
   }
 
   get logicOptions() {
@@ -158,14 +177,14 @@ export default class LWC_SearchFilter extends LightningElement {
 
   handleFieldChange(event) {
     this.selectedField = event.detail.value;
-    const selectedFieldType = this.getSelectedFieldType();
+    this.selectedFieldType = this.getSelectedFieldType();
     this.operatorOptions = operatorOptions
-      .filter(({ types }) => types.includes("ALL") || types.includes(selectedFieldType))
+      .filter(({ types }) => types.includes(this.selectedFieldType))
       .map(({ operatorLabel, operatorSymbol }) => ({
         label: operatorLabel,
         value: operatorSymbol
       }));
-    if (selectedFieldType === "PICKLIST") {
+    if (["PICKLIST", "MULTIPICKLIST"].includes(this.selectedFieldType)) {
       this.picklistOptions = this.getSelectedFieldPicklistValues();
     }
   }
@@ -248,8 +267,11 @@ export default class LWC_SearchFilter extends LightningElement {
     if (this.selectedOperator.includes("LIKE")) {
       return `${this.selectedField} ${this.selectedOperator.replace("KEY", this.value)}`;
     }
-    const selectedFieldType = this.getSelectedFieldType();
-    const isWithoutQuotes = this.isWithoutQuotes(selectedFieldType);
+    if (this.selectedFieldType === "MULTIPICKLIST") {
+      console.log(this.value);
+      return `${this.selectedField} ${this.selectedOperator} '${this.value.join(";")}'`;
+    }
+    const isWithoutQuotes = this.isWithoutQuotes(this.selectedFieldType);
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
   }
   validateInputs() {

@@ -28,6 +28,9 @@
   align-items: flex-end;
   gap: 1rem;
 }
+.filter__rule.multipicklist {
+  align-items: center;
+}
 
 .filter__rule-input {
   flex: 1;
