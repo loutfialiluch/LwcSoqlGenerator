@@ -44,11 +44,13 @@ const operatorOptions = [
   {
     operatorLabel: "contient",
     operatorSymbol: "LIKE '%KEY%'",
+    multipicklistOperatorSymbol: "includes ('KEY')",
     types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
   },
   {
     operatorLabel: "ne contient pas",
     operatorSymbol: "NOT LIKE '%KEY%'",
+    multipicklistOperatorSymbol: "excludes ('KEY')",
     types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
   },
   {
@@ -264,12 +266,13 @@ export default class LWC_SearchFilter extends LightningElement {
     };
   }
   getWhereClauseRule() {
+    if (this.selectedFieldType === "MULTIPICKLIST") {
+      const { multipicklistOperatorSymbol } = operatorOptions.find(({ operatorSymbol }) => operatorSymbol === this.selectedOperator);
+      return `${this.selectedField} ${multipicklistOperatorSymbol.replace("KEY", this.value.join(";"))}`;
+    }
+
     if (this.selectedOperator.includes("LIKE")) {
       return `${this.selectedField} ${this.selectedOperator.replace("KEY", this.value)}`;
-    }
-    if (this.selectedFieldType === "MULTIPICKLIST") {
-      console.log(this.value);
-      return `${this.selectedField} ${this.selectedOperator} '${this.value.join(";")}'`;
     }
     const isWithoutQuotes = this.isWithoutQuotes(this.selectedFieldType);
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
