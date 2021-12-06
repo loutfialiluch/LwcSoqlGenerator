@@ -90,6 +90,12 @@
   cursor: not-allowed;
 }
 
+.lookup-field__label {
+  font-size: 0.75rem !important;
+  margin-bottom: 0.125rem !important;
+  color: #3e3e3c;
+}
+
 @keyframes shake {
   10%,
   90% {

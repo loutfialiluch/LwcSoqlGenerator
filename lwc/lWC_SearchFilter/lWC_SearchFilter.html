@@ -69,6 +69,13 @@
             required="true"
           ></lightning-combobox>
         </template>
+        <template if:true={isLookupField}>
+          <lightning-record-edit-form class="filter__rule-input" object-api-name={objectApiName}>
+            <label class="lookup-field__label"><abbr title="required" class="slds-required">*</abbr>Valeur</label>
+            <lightning-input-field field-name={selectedField} variant="label-hidden" value={value} onchange={handleValueChange} required="true">
+            </lightning-input-field>
+          </lightning-record-edit-form>
+        </template>
         <template if:true={isOtherFields}>
           <lightning-input class="filter__rule-input" type="text" label="Valeur" value={value} onchange={handleValueChange} required="true"></lightning-input>
         </template>

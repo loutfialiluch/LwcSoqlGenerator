@@ -45,23 +45,23 @@ const operatorOptions = [
     operatorLabel: "contient",
     operatorSymbol: "LIKE '%KEY%'",
     multipicklistOperatorSymbol: "includes ('KEY')",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
   },
   {
     operatorLabel: "ne contient pas",
     operatorSymbol: "NOT LIKE '%KEY%'",
     multipicklistOperatorSymbol: "excludes ('KEY')",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN"].includes(type))]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
   },
   {
     operatorLabel: "commence par",
     operatorSymbol: "LIKE 'KEY%'",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN"].includes(type))]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
   },
   {
     operatorLabel: "ne commence pas par",
     operatorSymbol: "NOT LIKE 'KEY%'",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN"].includes(type))]
+    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
   }
 ];
 
@@ -113,11 +113,6 @@ export default class LWC_SearchFilter extends LightningElement {
       label,
       value: apiName
     }));
-    this.fieldOptions.sort(({ label: label1 }, { label: label2 }) => {
-      if (label1 > label2) return 1;
-      else if (label1 < label2) return -1;
-      return 0;
-    });
   }
 
   get filterRuleClass() {
@@ -149,8 +144,11 @@ export default class LWC_SearchFilter extends LightningElement {
   get isBooleanField() {
     return this.selectedFieldType === "BOOLEAN";
   }
+  get isLookupField() {
+    return this.selectedFieldType === "REFERENCE";
+  }
   get isOtherFields() {
-    return !["PICKLIST", "DATE", "DATETIME", "TIME", "MULTIPICKLIST", "BOOLEAN"].includes(this.selectedFieldType);
+    return !["PICKLIST", "DATE", "DATETIME", "TIME", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(this.selectedFieldType);
   }
 
   get logicOptions() {
@@ -259,10 +257,24 @@ export default class LWC_SearchFilter extends LightningElement {
     return operatorLabel;
   }
   getFilterRule() {
+    let value;
+    switch (this.selectedFieldType) {
+      case "DATE":
+        value = this.getFormattedDate(new Date(this.value));
+        break;
+      case "DATETIME":
+        value = this.getFormattedDateTime(new Date(this.value));
+        break;
+      case "TIME":
+        value = this.getFormattedTime(this.value);
+        break;
+      default:
+        value = this.value;
+    }
     return {
       field: this.getSelectedFieldLabel(this.selectedField),
       operator: this.getSelectedOperatorLabel(this.selectedOperator),
-      value: this.value
+      value
     };
   }
   getWhereClauseRule() {
@@ -276,6 +288,18 @@ export default class LWC_SearchFilter extends LightningElement {
     }
     const isWithoutQuotes = this.isWithoutQuotes(this.selectedFieldType);
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
+  }
+  getFormattedDate(date) {
+    return `${date.getDay().toString().padStart(2, "0")}/${date.getMonth().toString().padStart(2, "0")}/${date.getFullYear()}`;
+  }
+  getFormattedDateTime(dateTime) {
+    return `${dateTime.getDay().toString().padStart(2, "0")}/${dateTime.getMonth().toString().padStart(2, "0")}/${dateTime.getFullYear()} ${dateTime
+      .getHours()
+      .toString()
+      .padStart(2, "0")}:${dateTime.getMinutes().toString().padStart(2, "0")}`;
+  }
+  getFormattedTime(time) {
+    return time.substring(0, time.lastIndexOf(":"));
   }
   validateInputs() {
     const ruleInputs = this.template.querySelectorAll(".filter__rule-input");
