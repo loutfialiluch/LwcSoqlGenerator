@@ -43,7 +43,7 @@
           <lightning-input class="filter__rule-input" type="date" label="Date" value={value} onchange={handleValueChange} required="true"></lightning-input>
         </template>
         <template if:true={isDateTimeField}>
-          <lightning-input class="filter__rule-input" type="datetime" value={value} onchange={handleValueChange} required="true"></lightning-input>
+          <lightning-input class="filter__rule-input datetime" type="datetime" value={value} onchange={handleValueChange} required="true"></lightning-input>
         </template>
         <template if:true={isTimeField}>
           <lightning-input class="filter__rule-input" type="time" label="Time" value={value} onchange={handleValueChange} required="true"></lightning-input>

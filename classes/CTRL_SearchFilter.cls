@@ -7,7 +7,9 @@ public with sharing class CTRL_SearchFilter {
     List<Schema.FieldSetMember> fieldSetMemberList = fieldSetObj.getFields();
     for (Schema.FieldSetMember fieldSetMember : fieldSetMemberList) {
       String fieldType = String.valueOf(fieldSetMember.getType());
-      FieldSetItem fsi = new FieldSetItem(fieldSetMember.getFieldPath(), fieldSetMember.getLabel(), fieldType);
+      String fieldApiName = fieldSetMember.getFieldPath();
+      String fieldLabel = getFieldLabel(fieldApiName, fieldSetMember.getLabel());
+      FieldSetItem fsi = new FieldSetItem(fieldApiName, fieldLabel, fieldType);
       if (fieldType == 'PICKLIST' || fieldType == 'MULTIPICKLIST') {
         List<String> picklistValues = new List<String>();
         List<Schema.PicklistEntry> pickListEntries = fieldSetMember.getSObjectField().getDescribe().getPicklistValues();
@@ -19,6 +21,19 @@ public with sharing class CTRL_SearchFilter {
       fieldSetMemberDetailList.add(fsi);
     }
     return fieldSetMemberDetailList;
+  }
+
+  public static String getFieldLabel(String fieldApiName, String fieldLabel) {
+    if (fieldApiName.contains('.')) {
+      String parentObjectApiName;
+      if (fieldApiName.contains('__r')) {
+        fieldApiName = fieldApiName.replace('__r', '__c');
+      }
+      parentObjectApiName = fieldApiName.split('\\.').get(0);
+      return Schema.getGlobalDescribe().get(parentObjectApiName).getDescribe().getLabel() + ' > ' + fieldLabel;
+    } else {
+      return fieldLabel;
+    }
   }
 
   public class FieldSetItem {

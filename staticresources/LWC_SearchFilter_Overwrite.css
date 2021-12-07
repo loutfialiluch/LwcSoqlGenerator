@@ -17,3 +17,7 @@
 .filter__legend path {
   fill: #ffffff;
 }
+
+.filter > .filter__rule > .filter__rule-input.datetime abbr.slds-required {
+  display: none;
+}
