@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-alert */
+/* eslint-disable use-isnan */
+/* eslint-disable no-eval */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-useless-return */
 import { LightningElement, api } from "lwc";
@@ -92,6 +96,7 @@ export default class LWC_SearchFilter extends LightningElement {
   selectedField;
   selectedOperator;
   value;
+  customLogic;
   selectedLogic = "AND";
   booleanOptions = booleanOptions;
   filterRules = [];
@@ -203,6 +208,7 @@ export default class LWC_SearchFilter extends LightningElement {
     }
     this.whereClauseRules = [...this.whereClauseRules, this.getWhereClauseRule()];
     this.filterRules = [...this.filterRules, this.getFilterRule()];
+    this.setFilterRulesIndexes();
     this.clearFilterRule();
   }
 
@@ -213,6 +219,7 @@ export default class LWC_SearchFilter extends LightningElement {
   handleDeleteRule(event) {
     const ruleIndex = +event.target.dataset.index;
     this.filterRules = this.filterRules.filter((filterRule, index) => index !== ruleIndex);
+    this.setFilterRulesIndexes();
     this.whereClauseRules = this.whereClauseRules.filter((whereClauseRule, index) => index !== ruleIndex);
   }
 
@@ -227,13 +234,47 @@ export default class LWC_SearchFilter extends LightningElement {
     if (!this.filterRules.length) {
       return;
     }
-    if (this.selectedLogic === "CUSTOM") {
-      console.log("custom logic");
-    } else {
+
+    if (this.selectedLogic !== "CUSTOM") {
       const whereClause = this.whereClauseRules.join(` ${this.selectedLogic} `);
       const query = `SELECT ${this.fieldsToQuery.join(", ")} FROM ${this.objectApiName} WHERE ${whereClause}`;
       alert(query);
+      return;
     }
+
+    const customLogicInput = this.template.querySelector("[data-custom-logic]");
+
+    if (!customLogicInput.reportValidity()) {
+      return;
+    }
+
+    if (!this.validateCustomLogicExpression()) {
+      customLogicInput.setCustomValidity("Logique personnalisée erronée !");
+      customLogicInput.reportValidity();
+      return;
+    }
+
+    if (!this.validateCustomLogicNumbers()) {
+      customLogicInput.setCustomValidity("Veuillez utiliser les nombres correspondants aux filtres ajoutés !");
+      customLogicInput.reportValidity();
+      return;
+    }
+
+    if (!this.validateIfAllFilterRulesHasBeenUsed()) {
+      customLogicInput.setCustomValidity("Certains filtres ne sont pas utilisés, veuillez les utiliser ou les supprimer avant de réessayer !");
+      customLogicInput.reportValidity();
+      return;
+    }
+    const whereClause = this.getCustomLogicWhereClause();
+    const query = `SELECT ${this.fieldsToQuery.join(", ")} FROM ${this.objectApiName} WHERE ${whereClause}`;
+    alert(query);
+  }
+
+  handleCustomLogicChange(event) {
+    this.customLogic = event.detail.value;
+  }
+  handleCustomLogicFocus(event) {
+    event.target.setCustomValidity("");
   }
 
   // ********** HELPERS **********
@@ -278,14 +319,18 @@ export default class LWC_SearchFilter extends LightningElement {
     };
   }
   getWhereClauseRule() {
+    // ****** /EXCEPTIONS ******
+    if (this.selectedFieldType === "TIME") {
+      return `${this.selectedField} ${this.selectedOperator} ${this.value}Z`;
+    }
     if (this.selectedFieldType === "MULTIPICKLIST") {
       const { multipicklistOperatorSymbol } = operatorOptions.find(({ operatorSymbol }) => operatorSymbol === this.selectedOperator);
       return `${this.selectedField} ${multipicklistOperatorSymbol.replace("KEY", this.value.join(";"))}`;
     }
-
     if (this.selectedOperator.includes("LIKE")) {
       return `${this.selectedField} ${this.selectedOperator.replace("KEY", this.value)}`;
     }
+    // ****** /EXCEPTIONS ******
     const isWithoutQuotes = this.isWithoutQuotes(this.selectedFieldType);
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
   }
@@ -301,16 +346,88 @@ export default class LWC_SearchFilter extends LightningElement {
   getFormattedTime(time) {
     return time.substring(0, time.lastIndexOf(":"));
   }
+
+  getCustomLogicNumbers() {
+    let customLogic = this.customLogic;
+    customLogic = customLogic.replaceAll(/AND|OR/g, " ").replace(/\(|\)/g, "");
+    const customLogicNumbers = [];
+    let customLogicNumber = "";
+    for (let i = 0; i < customLogic.length; i++) {
+      if (this.isValidExpressionNum(customLogic.charAt(i))) {
+        customLogicNumber += customLogic.charAt(i);
+      }
+      if (customLogicNumber && !this.isValidExpressionNum(customLogic.charAt(i + 1))) {
+        customLogicNumbers.push(customLogicNumber);
+        customLogicNumber = "";
+      }
+    }
+    return customLogicNumbers;
+  }
+
+  getCustomLogicWhereClause() {
+    const customWhereClause = [...this.customLogic];
+    let customLogic = this.customLogic;
+    let customLogicNumber = "";
+    let startIndex = -1;
+    let endIndex = -1;
+    for (let i = 0; i < customLogic.length; i++) {
+      if (this.isValidExpressionNum(customLogic.charAt(i))) {
+        startIndex === -1 && (startIndex = i);
+        customLogicNumber += customLogic.charAt(i);
+      }
+      if (customLogicNumber && !this.isValidExpressionNum(customLogic.charAt(i + 1))) {
+        endIndex = i;
+        customWhereClause.splice(startIndex, startIndex - endIndex + 1, this.whereClauseRules[+customLogicNumber - 1]);
+        startIndex = -1;
+        customLogicNumber = "";
+      }
+    }
+    return customWhereClause.join("");
+  }
   validateInputs() {
     const ruleInputs = this.template.querySelectorAll(".filter__rule-input");
     return Array.from(ruleInputs).reduce((validSoFar, curr) => validSoFar && curr.reportValidity(), true);
   }
+  validateCustomLogicExpression() {
+    let customLogic = this.customLogic.replaceAll("AND", "&&").replaceAll("OR", "||");
+    for (let i = this.filterRules.length; i > 0; i--) {
+      customLogic = customLogic.replaceAll(`${i}`, "true");
+    }
+    try {
+      eval(customLogic);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  validateCustomLogicNumbers() {
+    const customLogicNumbers = this.getCustomLogicNumbers();
+    const maxCustomLogicNumber = Math.max(...customLogicNumbers);
+    return maxCustomLogicNumber <= this.filterRules.length;
+  }
+
+  validateIfAllFilterRulesHasBeenUsed() {
+    const usedCustomLogicNumbers = new Set([...this.getCustomLogicNumbers()]);
+    return [...usedCustomLogicNumbers].length === this.filterRules.length;
+  }
+
   clearFilterRule() {
     this.selectedField = null;
     this.selectedOperator = null;
     this.value = null;
   }
+
   isWithoutQuotes(field) {
     return withoutQuotesFields.includes(field);
+  }
+
+  setFilterRulesIndexes() {
+    this.filterRules = this.filterRules.map((filterRule, index) => ({
+      ...filterRule,
+      index: index + 1
+    }));
+  }
+  isValidExpressionNum(num) {
+    return ![NaN, 0].includes(+num);
   }
 }

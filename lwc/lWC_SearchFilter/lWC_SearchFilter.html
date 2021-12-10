@@ -85,15 +85,20 @@
     <div class="filter__rules">
       <template for:each={filterRules} for:item="filterRule" for:index="index">
         <div key={filterRule.index} class="filter__rules-item">
-          <p>&lbrace;{index}&rbrace;&nbsp;&nbsp;<span>{filterRule.field}</span>&nbsp;&nbsp;{filterRule.operator}&nbsp;&nbsp;<span>{filterRule.value}</span></p>
-          <lightning-icon
-            class="filter__rules-delete-btn"
-            icon-name="action:delete"
-            title="Supprimer"
-            size="x-small"
-            data-index={index}
-            onclick={handleDeleteRule}
-          ></lightning-icon>
+          <div class="filter__rules-item_left">
+            <span>{filterRule.index}</span>
+          </div>
+          <div class="filter__rules-item_right">
+            <p><span>{filterRule.field}</span>&nbsp;&nbsp;{filterRule.operator}&nbsp;&nbsp;<span>{filterRule.value}</span></p>
+            <lightning-icon
+              class="filter__rules-delete-btn"
+              icon-name="action:delete"
+              title="Supprimer"
+              size="x-small"
+              data-index={index}
+              onclick={handleDeleteRule}
+            ></lightning-icon>
+          </div>
         </div>
       </template>
     </div>
@@ -109,7 +114,15 @@
       <template if:true={isCustomLogic}>
         <div class="filter__logic-custom">
           <label>Logique personnalisée<lightning-helptext content={customLogicHelpText}></lightning-helptext></label>
-          <lightning-input type="text" variant="label-hidden"></lightning-input>
+          <lightning-input
+            data-custom-logic
+            type="text"
+            variant="label-hidden"
+            value={customLogic}
+            onchange={handleCustomLogicChange}
+            onfocus={handleCustomLogicFocus}
+            required="true"
+          ></lightning-input>
         </div>
       </template>
     </div>

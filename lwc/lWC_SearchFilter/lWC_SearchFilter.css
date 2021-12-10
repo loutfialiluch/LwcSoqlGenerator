@@ -1,6 +1,6 @@
 .filter label {
   display: block;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.125rem;
 }
 .filter {
   background-color: #ffffff;
@@ -45,6 +45,24 @@
 }
 .filter__rules-item {
   display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter__rules-item_left {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter__rules-item_left > span {
+  font-weight: 500;
+  margin-left: 0.3125rem;
+}
+
+.filter__rules-item_right {
+  flex: 1;
+  display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid #cccccc;
@@ -52,7 +70,7 @@
   border-radius: 0.3rem;
 }
 
-.filter__rules-item span {
+.filter__rules-item_right span {
   font-weight: bold;
 }
 
