@@ -15,7 +15,12 @@ A reusable LWC component that helps you build SOQL queries easily based on field
 <p>A ready to use SOQL query based on the filter rules entered by the user</p>
 
 <h3>- Example of usage : </h3>
-<a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.html">lwcSoqlGeneratorUsageExample.html</a>
+<a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.html" target="_blank">lwcSoqlGeneratorUsageExample.html</a>
 <img src="https://i.ibb.co/9pxQj53/Lwc-Soql-Generator-Usage-1.png" width="450" style="display:block;margin: 10px" alt="Usage example" />
-<a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.js">lwcSoqlGeneratorUsageExample.js</a>
+<a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.js" target="_blank">lwcSoqlGeneratorUsageExample.js</a>
 <img src="https://i.ibb.co/3mGFTQq/Lwc-Soql-Generator-Usage-2.png" width="600" style="display:block;margin: 10px" alt="Usage example" />
+
+<h3>- Package Installation :</h3>
+<ul>
+<li><a href="https://login.salesforce.com/packaging/installPackage.apexp?p0=04t8d000000HPN4" target="_blank">LWC SOQL Generator V1.0</a></li>
+</ul>

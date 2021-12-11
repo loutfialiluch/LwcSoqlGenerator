@@ -1,7 +1,7 @@
 import { LightningElement, api } from "lwc";
 import getFieldSetDetails from "@salesforce/apex/CTRL_LwcSoqlGenerator.getFieldSetDetails";
 import { loadStyle } from "lightning/platformResourceLoader";
-import searchFilterCssOverwrite from "@salesforce/resourceUrl/LWC_SoqlGeneratorCssOverwrite";
+import searchFilterCssOverwrite from "@salesforce/resourceUrl/LwcSoqlGeneratorCssOverwrite";
 
 const numericTypes = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "LONG"];
 const otherTypes = [
