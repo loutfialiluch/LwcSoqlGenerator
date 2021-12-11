@@ -1,0 +1,23 @@
+.filter > .filter__rule .slds-form-element_compound .slds-form-element__row {
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+
+.filter > .filter__logic > .filter__logic-custom .slds-form-element__icon {
+  vertical-align: unset;
+  padding-top: 0;
+}
+
+.filter > .filter__logic .slds-radio_button .slds-radio_faux {
+  font-weight: 500;
+}
+
+.filter__legend path {
+  fill: #ffffff;
+}
+
+.filter > .filter__rule > .filter__rule-input.datetime abbr.slds-required {
+  display: none;
+}
