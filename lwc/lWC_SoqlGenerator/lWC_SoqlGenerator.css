@@ -1,0 +1,138 @@
+.filter label {
+  display: block;
+  margin-bottom: 0.125rem;
+}
+.filter {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border: 1px solid var(--lwc-brandAccessible);
+  border-radius: 0.4rem;
+}
+.filter__legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background-color: var(--lwc-brandAccessible);
+  color: #fff;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.filter__rule {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.filter__rule.multipicklist {
+  align-items: center;
+}
+
+.filter__rule-input {
+  flex: 1;
+}
+
+.filter__rules {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.filter__rules-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter__rules-item_left {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter__rules-item_left > span {
+  font-weight: 500;
+  margin-left: 0.3125rem;
+}
+
+.filter__rules-item_right {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #cccccc;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.3rem;
+}
+
+.filter__rules-item_right span {
+  font-weight: bold;
+}
+
+.filter__rules-delete-btn {
+  cursor: pointer;
+}
+.filter__rules-delete-btn:hover {
+  opacity: 0.9;
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform: translate3d(0, 0, 0);
+}
+
+.filter__logic label {
+  color: #3e3e3c;
+}
+
+.filter__logic-custom {
+  max-width: 17.5rem;
+  margin-top: 0.5rem;
+}
+
+.filter__logic-custom label {
+  display: flex;
+  align-items: center;
+}
+
+.filter__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.filter__footer button:disabled {
+  cursor: not-allowed;
+}
+
+.lookup-field__label {
+  font-size: 0.75rem !important;
+  margin-bottom: 0.125rem !important;
+  color: #3e3e3c;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(-0.5px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(1px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(2px, 0, 0);
+  }
+}

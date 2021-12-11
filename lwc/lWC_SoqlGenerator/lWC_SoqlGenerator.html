@@ -1,0 +1,134 @@
+<!-- sldsValidatorIgnore -->
+<template>
+  <fieldset class="filter">
+    <legend class="filter__legend"><lightning-icon icon-name="utility:filterList" size="x-small"></lightning-icon>Filtre</legend>
+    <div class={filterRuleClass}>
+      <lightning-combobox
+        class="filter__rule-input"
+        name="progress"
+        label="Champ"
+        placeholder="Choisir un champ"
+        value={selectedField}
+        options={fieldOptions}
+        onchange={handleFieldChange}
+        required="true"
+      ></lightning-combobox>
+      <lightning-combobox
+        class="filter__rule-input"
+        name="progress"
+        label="Opérateur"
+        value={selectedOperator}
+        placeholder="Choisir un opérateur"
+        options={operatorOptions}
+        onchange={handleOperatorChange}
+        disabled={inputsDisabled}
+        required="true"
+      ></lightning-combobox>
+      <template if:true={inputsDisabled}>
+        <lightning-input class="filter__rule-input" type="text" label="Valeur" disabled="true" required="true"></lightning-input>
+      </template>
+      <template if:false={inputsDisabled}>
+        <template if:true={isPickListField}>
+          <lightning-combobox
+            class="filter__rule-input"
+            label="Valeur"
+            placeholder="Choisir une valeur"
+            options={picklistOptions}
+            value={value}
+            onchange={handleValueChange}
+            required="true"
+          ></lightning-combobox>
+        </template>
+        <template if:true={isDateField}>
+          <lightning-input class="filter__rule-input" type="date" label="Date" value={value} onchange={handleValueChange} required="true"></lightning-input>
+        </template>
+        <template if:true={isDateTimeField}>
+          <lightning-input class="filter__rule-input datetime" type="datetime" value={value} onchange={handleValueChange} required="true"></lightning-input>
+        </template>
+        <template if:true={isTimeField}>
+          <lightning-input class="filter__rule-input" type="time" label="Time" value={value} onchange={handleValueChange} required="true"></lightning-input>
+        </template>
+        <template if:true={isMultipicklistField}>
+          <lightning-dual-listbox
+            class="filter__rule-input"
+            label="Choisir les valeurs"
+            options={picklistOptions}
+            onchange={handleValueChange}
+            disable-reordering="true"
+            required="true"
+          ></lightning-dual-listbox>
+        </template>
+        <template if:true={isBooleanField}>
+          <lightning-combobox
+            class="filter__rule-input"
+            label="Valeur"
+            placeholder="Choisir une valeur"
+            options={booleanOptions}
+            value={value}
+            onchange={handleValueChange}
+            required="true"
+          ></lightning-combobox>
+        </template>
+        <template if:true={isLookupField}>
+          <lightning-record-edit-form class="filter__rule-input" object-api-name={objectApiName}>
+            <label class="lookup-field__label"><abbr title="required" class="slds-required">*</abbr>Valeur</label>
+            <lightning-input-field field-name={selectedField} variant="label-hidden" value={value} onchange={handleValueChange} required="true">
+            </lightning-input-field>
+          </lightning-record-edit-form>
+        </template>
+        <template if:true={isOtherFields}>
+          <lightning-input class="filter__rule-input" type="text" label="Valeur" value={value} onchange={handleValueChange} required="true"></lightning-input>
+        </template>
+      </template>
+      <button class="filter__rule-add-btn slds-button slds-button_brand" onclick={handleAddRule}>Ajouter</button>
+    </div>
+    <div class="filter__rules">
+      <template for:each={filterRules} for:item="filterRule" for:index="index">
+        <div key={filterRule.index} class="filter__rules-item">
+          <div class="filter__rules-item_left">
+            <span>{filterRule.index}</span>
+          </div>
+          <div class="filter__rules-item_right">
+            <p><span>{filterRule.field}</span>&nbsp;&nbsp;{filterRule.operator}&nbsp;&nbsp;<span>{filterRule.value}</span></p>
+            <lightning-icon
+              class="filter__rules-delete-btn"
+              icon-name="action:delete"
+              title="Supprimer"
+              size="x-small"
+              data-index={index}
+              onclick={handleDeleteRule}
+            ></lightning-icon>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div if:true={shouldDisplayLogicSelector} class="filter__logic">
+      <label>Choisir la logique du filtre</label>
+      <lightning-radio-group
+        variant="label-hidden"
+        type="button"
+        options={logicOptions}
+        value={selectedLogic}
+        onchange={handleLogicChange}
+      ></lightning-radio-group>
+      <template if:true={isCustomLogic}>
+        <div class="filter__logic-custom">
+          <label>Logique personnalisée<lightning-helptext content={customLogicHelpText}></lightning-helptext></label>
+          <lightning-input
+            data-custom-logic
+            type="text"
+            variant="label-hidden"
+            value={customLogic}
+            onchange={handleCustomLogicChange}
+            onfocus={handleCustomLogicFocus}
+            required="true"
+          ></lightning-input>
+        </div>
+      </template>
+    </div>
+    <div class="filter__footer">
+      <button class="slds-button slds-button_neutral" onclick={handleReset}>Réinitialiser</button>
+      <button class="slds-button slds-button_brand" onclick={handleSearch} disabled={shouldDisplaySearchBtn}>Rechercher</button>
+    </div>
+  </fieldset>
+</template>
