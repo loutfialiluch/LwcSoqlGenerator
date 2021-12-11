@@ -76,11 +76,11 @@ const booleanOptions = [
 
 export default class LWC_SoqlGenerator extends LightningElement {
   @api
-  objectApiName = "Child__c";
+  objectApiName = "SOQL_Generator_Child__c";
   @api
-  filterFieldSetName = "SearchFilter_FS";
+  filterFieldSetName = "SoqlGeneratorFilterFields";
   @api
-  fieldSetToQueryName = "FieldsToQuery_FS";
+  fieldSetToQueryName = "SoqlGeneratorFieldsToQuery";
 
   filterFieldSetDetails;
   fieldsToQuery;
