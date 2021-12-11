@@ -245,7 +245,7 @@ export default class LWC_SoqlGenerator extends LightningElement {
     if (this.selectedLogic !== "CUSTOM") {
       const whereClause = this.whereClauseRules.join(` ${this.selectedLogic} `);
       const query = `SELECT ${this.fieldsToQuery.join(", ")} FROM ${this.objectApiName} WHERE ${whereClause}`;
-      alert(query);
+      this.fireOnSearchEvent(query);
       return;
     }
 
@@ -276,7 +276,7 @@ export default class LWC_SoqlGenerator extends LightningElement {
     }
     const whereClause = this.getCustomLogicWhereClause();
     const query = `SELECT ${this.fieldsToQuery.join(", ")} FROM ${this.objectApiName} WHERE ${whereClause}`;
-    alert(query);
+    this.fireOnSearchEvent(query);
   }
 
   handleCustomLogicChange(event) {
@@ -449,5 +449,12 @@ export default class LWC_SoqlGenerator extends LightningElement {
   }
   isValidExpressionNum(num) {
     return ![NaN, 0].includes(+num);
+  }
+
+  fireOnSearchEvent(query) {
+    const onSearchCustomEvent = new CustomEvent("search", {
+      detail: query
+    });
+    this.dispatchEvent(onSearchCustomEvent);
   }
 }
