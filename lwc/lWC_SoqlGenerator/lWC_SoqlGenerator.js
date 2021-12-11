@@ -4,7 +4,18 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import searchFilterCssOverwrite from "@salesforce/resourceUrl/LWC_SoqlGeneratorCssOverwrite";
 
 const numericTypes = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "LONG"];
-const otherTypes = ["BOOLEAN", "EMAIL", "ID", "LOCATION", "MULTIPICKLIST", "PICKLIST", "REFERENCE", "STRING", "TEXTAREA", "URL"];
+const otherTypes = [
+  "BOOLEAN",
+  "EMAIL",
+  "ID",
+  "LOCATION",
+  "MULTIPICKLIST",
+  "PICKLIST",
+  "REFERENCE",
+  "STRING",
+  "TEXTAREA",
+  "URL"
+];
 
 const withoutQuotesFields = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "BOOLEAN"];
 
@@ -147,7 +158,9 @@ export default class LWC_SoqlGenerator extends LightningElement {
     return this.selectedFieldType === "REFERENCE";
   }
   get isOtherFields() {
-    return !["PICKLIST", "DATE", "DATETIME", "TIME", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(this.selectedFieldType);
+    return !["PICKLIST", "DATE", "DATETIME", "TIME", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(
+      this.selectedFieldType
+    );
   }
 
   get logicOptions() {
@@ -255,7 +268,9 @@ export default class LWC_SoqlGenerator extends LightningElement {
     }
 
     if (!this.validateIfAllFilterRulesHasBeenUsed()) {
-      customLogicInput.setCustomValidity("Certains filtres ne sont pas utilisés, veuillez les utiliser ou les supprimer avant de réessayer !");
+      customLogicInput.setCustomValidity(
+        "Certains filtres ne sont pas utilisés, veuillez les utiliser ou les supprimer avant de réessayer !"
+      );
       customLogicInput.reportValidity();
       return;
     }
@@ -273,7 +288,9 @@ export default class LWC_SoqlGenerator extends LightningElement {
 
   // ********** HELPERS **********
   getSelectedFieldType() {
-    const { type: selectedFieldType } = this.filterFieldSetDetails.find(({ apiName }) => apiName === this.selectedField);
+    const { type: selectedFieldType } = this.filterFieldSetDetails.find(
+      ({ apiName }) => apiName === this.selectedField
+    );
     return selectedFieldType;
   }
   getSelectedFieldPicklistValues() {
@@ -303,6 +320,9 @@ export default class LWC_SoqlGenerator extends LightningElement {
       case "TIME":
         value = this.getFormattedTime(this.value);
         break;
+      case "BOOLEAN":
+        value = this.value === "true" ? "vrai" : "faux";
+        break;
       default:
         value = this.value;
     }
@@ -318,7 +338,9 @@ export default class LWC_SoqlGenerator extends LightningElement {
       return `${this.selectedField} ${this.selectedOperator} ${this.value}Z`;
     }
     if (this.selectedFieldType === "MULTIPICKLIST") {
-      const { multipicklistOperatorSymbol } = operatorOptions.find(({ operatorSymbol }) => operatorSymbol === this.selectedOperator);
+      const { multipicklistOperatorSymbol } = operatorOptions.find(
+        ({ operatorSymbol }) => operatorSymbol === this.selectedOperator
+      );
       return `${this.selectedField} ${multipicklistOperatorSymbol.replace("KEY", this.value.join(";"))}`;
     }
     if (this.selectedOperator.includes("LIKE")) {
@@ -329,13 +351,17 @@ export default class LWC_SoqlGenerator extends LightningElement {
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
   }
   getFormattedDate(date) {
-    return `${date.getDay().toString().padStart(2, "0")}/${date.getMonth().toString().padStart(2, "0")}/${date.getFullYear()}`;
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
   }
   getFormattedDateTime(dateTime) {
-    return `${dateTime.getDay().toString().padStart(2, "0")}/${dateTime.getMonth().toString().padStart(2, "0")}/${dateTime.getFullYear()} ${dateTime
-      .getHours()
+    return `${dateTime.getDate().toString().padStart(2, "0")}/${(dateTime.getMonth() + 1)
       .toString()
-      .padStart(2, "0")}:${dateTime.getMinutes().toString().padStart(2, "0")}`;
+      .padStart(2, "0")}/${dateTime.getFullYear()} ${dateTime.getHours().toString().padStart(2, "0")}:${dateTime
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
   }
   getFormattedTime(time) {
     return time.substring(0, time.lastIndexOf(":"));

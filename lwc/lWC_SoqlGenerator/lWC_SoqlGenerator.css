@@ -46,18 +46,17 @@
 .filter__rules-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
 }
 
 .filter__rules-item_left {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 25px;
 }
 
 .filter__rules-item_left > span {
   font-weight: 500;
-  margin-left: 0.3125rem;
 }
 
 .filter__rules-item_right {
