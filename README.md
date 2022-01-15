@@ -9,6 +9,7 @@ A reusable LWC component that helps you build SOQL queries easily based on field
 <li> The api name of the object (sObject) </li>
 <li> The api name of the fieldset used for filtering data </li>
 <li> The api name of the fieldset used for querying data </li>
+<li> The language (for now only <b>english</b> and <b>french</b> are supported)</li>
 </ul>
 
 <h3>- LwcSoqlGenerator returns one ouput :</h3>
@@ -16,11 +17,11 @@ A reusable LWC component that helps you build SOQL queries easily based on field
 
 <h3>- Example of usage : </h3>
 <a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.html" target="_blank">lwcSoqlGeneratorUsageExample.html</a>
-<img src="https://i.ibb.co/9pxQj53/Lwc-Soql-Generator-Usage-1.png" width="450" style="display:block;margin: 10px" alt="Usage example" />
+<img src="https://i.ibb.co/XyzrQXp/Lwc-Soql-Generator-Usage-1.png" width="450" style="display:block;margin: 10px" alt="Usage example" />
 <a style="display:block;margin: 10px" href="https://github.com/loutfialiluch/LwcSoqlGenerator/blob/master/lwc/lwcSoqlGeneratorUsageExample/lwcSoqlGeneratorUsageExample.js" target="_blank">lwcSoqlGeneratorUsageExample.js</a>
 <img src="https://i.ibb.co/3mGFTQq/Lwc-Soql-Generator-Usage-2.png" width="600" style="display:block;margin: 10px" alt="Usage example" />
 
 <h3>- Package Installation :</h3>
 <ul>
-<li><a href="https://login.salesforce.com/packaging/installPackage.apexp?p0=04t8d000000HPN4" target="_blank">LWC SOQL Generator V1.0</a></li>
+<li><a href="https://login.salesforce.com/packaging/installPackage.apexp?p0=04t8d000000HPN9" target="_blank">LWC SOQL Generator (Latest Version)</a></li>
 </ul>
