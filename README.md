@@ -4,7 +4,7 @@ A reusable LWC component that helps you build SOQL queries easily based on field
 
 <img src="https://i.ibb.co/2KfSg55/Lwc-Soql-Generator-Github.png" alt="LwcSoqlGenerator" />
 
-<h3>- LwcSoqlGenerator takes three inputs :</h3>
+<h3>- LwcSoqlGenerator takes four inputs :</h3>
 <ul>
 <li> The api name of the object (sObject) </li>
 <li> The api name of the fieldset used for filtering data </li>
