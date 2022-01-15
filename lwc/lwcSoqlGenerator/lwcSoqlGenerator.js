@@ -1,89 +1,20 @@
 import { LightningElement, api } from "lwc";
 import getFieldSetDetails from "@salesforce/apex/CTRL_LwcSoqlGenerator.getFieldSetDetails";
-import { loadStyle } from "lightning/platformResourceLoader";
+import { WITHOUT_QUOTES_TYPES } from "./lwcSoqlGeneratorConstants";
+import { SUPPORTED_LANGUAGES } from "./lwcSoqlGeneratorLang";
+import {
+  getFormattedDate,
+  getFormattedDateTime,
+  getFormattedTime,
+  getOperatorOptions,
+  getBooleanOptions,
+  getFilterLogicOptions,
+  setIndexes,
+  validateInputs,
+  isValidExpressionNum
+} from "./lwcSoqlGeneratorUtils.js";
 import searchFilterCssOverwrite from "@salesforce/resourceUrl/LwcSoqlGeneratorCssOverwrite";
-
-const numericTypes = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "LONG"];
-const otherTypes = [
-  "BOOLEAN",
-  "EMAIL",
-  "ID",
-  "LOCATION",
-  "MULTIPICKLIST",
-  "PICKLIST",
-  "REFERENCE",
-  "STRING",
-  "TEXTAREA",
-  "URL"
-];
-
-const withoutQuotesFields = ["DATETIME", "CURRENCY", "DATE", "TIME", "INTEGER", "PERCENT", "DOUBLE", "BOOLEAN"];
-
-const operatorOptions = [
-  {
-    operatorLabel: "égal",
-    operatorSymbol: "=",
-    types: [...numericTypes, ...otherTypes.filter((type) => type !== "MULTIPICKLIST")]
-  },
-  {
-    operatorLabel: "différent",
-    operatorSymbol: "!=",
-    types: [...numericTypes, ...otherTypes.filter((type) => type !== "MULTIPICKLIST")]
-  },
-  {
-    operatorLabel: "supérieur",
-    operatorSymbol: ">",
-    types: [...numericTypes]
-  },
-  {
-    operatorLabel: "inférieur",
-    operatorSymbol: "<",
-    types: [...numericTypes]
-  },
-  {
-    operatorLabel: "supérieur ou égal",
-    operatorSymbol: ">=",
-    types: [...numericTypes]
-  },
-  {
-    operatorLabel: "inférieur ou égal",
-    operatorSymbol: "<=",
-    types: [...numericTypes]
-  },
-  {
-    operatorLabel: "contient",
-    operatorSymbol: "LIKE '%KEY%'",
-    multipicklistOperatorSymbol: "includes ('KEY')",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
-  },
-  {
-    operatorLabel: "ne contient pas",
-    operatorSymbol: "NOT LIKE '%KEY%'",
-    multipicklistOperatorSymbol: "excludes ('KEY')",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
-  },
-  {
-    operatorLabel: "commence par",
-    operatorSymbol: "LIKE 'KEY%'",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
-  },
-  {
-    operatorLabel: "ne commence pas par",
-    operatorSymbol: "NOT LIKE 'KEY%'",
-    types: [...otherTypes.filter((type) => !["PICKLIST", "MULTIPICKLIST", "BOOLEAN", "REFERENCE"].includes(type))]
-  }
-];
-
-const booleanOptions = [
-  {
-    label: "vrai",
-    value: "true"
-  },
-  {
-    label: "faux",
-    value: "false"
-  }
-];
+import { loadStyle } from "lightning/platformResourceLoader";
 
 export default class LwcSoqlGenerator extends LightningElement {
   @api
@@ -92,24 +23,37 @@ export default class LwcSoqlGenerator extends LightningElement {
   filterFieldSetName = "SoqlGeneratorFilterFields";
   @api
   fieldSetToQueryName = "SoqlGeneratorFieldsToQuery";
+  @api
+  lang = "en";
 
   filterFieldSetDetails;
   fieldsToQuery;
   fieldOptions;
+  booleanOptions;
   operatorOptions;
-  picklistOptions;
+  operatorPicklistOptions;
+  valuePicklistOptions;
+  filterLogicOptions;
   selectedField;
   selectedOperator;
   value;
   customLogic;
   selectedLogic = "AND";
-  booleanOptions = booleanOptions;
   filterRules = [];
   whereClauseRules = [];
+  langObj; // This object contains the different labels and messages used in the component based on the passed in language (en/fr)
 
   async connectedCallback() {
     // Overwriting some lightning components css properties
     loadStyle(this, searchFilterCssOverwrite);
+
+    // Loading the different labels and messages used in the component based on the passed in language
+    this.loadLangObject();
+
+    this.operatorOptions = getOperatorOptions(this.langObj);
+    this.booleanOptions = getBooleanOptions(this.langObj);
+    this.filterLogicOptions = getFilterLogicOptions(this.langObj);
+
     this.filterFieldSetDetails = await getFieldSetDetails({
       objectApiName: this.objectApiName,
       fieldSetName: this.filterFieldSetName
@@ -163,20 +107,12 @@ export default class LwcSoqlGenerator extends LightningElement {
     );
   }
 
-  get logicOptions() {
-    return [
-      { label: "ET", value: "AND" },
-      { label: "OU", value: "OR" },
-      { label: "CUSTOM", value: "CUSTOM" }
-    ];
-  }
-
   get isCustomLogic() {
     return this.selectedLogic === "CUSTOM";
   }
 
   get customLogicHelpText() {
-    return "Utiliser les parenthèses, ET, OU  pour personnaliser la logique. par exemple : (1 AND 2 AND 3) OR 4";
+    return this.langObj.customLogicHelpText;
   }
 
   get shouldDisplayLogicSelector() {
@@ -190,14 +126,14 @@ export default class LwcSoqlGenerator extends LightningElement {
   handleFieldChange(event) {
     this.selectedField = event.detail.value;
     this.selectedFieldType = this.getSelectedFieldType();
-    this.operatorOptions = operatorOptions
+    this.operatorPicklistOptions = this.operatorOptions
       .filter(({ types }) => types.includes(this.selectedFieldType))
       .map(({ operatorLabel, operatorSymbol }) => ({
         label: operatorLabel,
         value: operatorSymbol
       }));
     if (["PICKLIST", "MULTIPICKLIST"].includes(this.selectedFieldType)) {
-      this.picklistOptions = this.getSelectedFieldPicklistValues();
+      this.valuePicklistOptions = this.getSelectedFieldPicklistValues();
     }
   }
 
@@ -210,12 +146,13 @@ export default class LwcSoqlGenerator extends LightningElement {
   }
 
   handleAddRule() {
-    if (!this.validateInputs()) {
+    const filterRuleInputs = this.template.querySelectorAll(".filter__rule-input");
+    if (!validateInputs(filterRuleInputs)) {
       return;
     }
     this.whereClauseRules = [...this.whereClauseRules, this.getWhereClauseRule()];
     this.filterRules = [...this.filterRules, this.getFilterRule()];
-    this.setFilterRulesIndexes();
+    this.filterRules = setIndexes(this.filterRules);
     this.clearFilterRule();
   }
 
@@ -225,16 +162,16 @@ export default class LwcSoqlGenerator extends LightningElement {
 
   handleDeleteRule(event) {
     const ruleIndex = +event.target.dataset.index;
-    this.filterRules = this.filterRules.filter((filterRule, index) => index !== ruleIndex);
-    this.setFilterRulesIndexes();
-    this.whereClauseRules = this.whereClauseRules.filter((whereClauseRule, index) => index !== ruleIndex);
+    this.filterRules = this.filterRules.filter(({ index }) => index - 1 !== ruleIndex);
+    this.filterRules = setIndexes(this.filterRules);
+    this.whereClauseRules = this.whereClauseRules.filter(({ index }) => index - 1 !== ruleIndex);
   }
 
   handleReset() {
     this.clearFilterRule();
     this.whereClauseRules = [];
     this.filterRules = [];
-    this.selectedLogic = "ET";
+    this.selectedLogic = "AND";
   }
 
   handleSearch() {
@@ -256,21 +193,19 @@ export default class LwcSoqlGenerator extends LightningElement {
     }
 
     if (!this.validateCustomLogicExpression()) {
-      customLogicInput.setCustomValidity("Logique personnalisée erronée !");
+      customLogicInput.setCustomValidity(this.langObj.wrongCustomLogicErrorMsg);
       customLogicInput.reportValidity();
       return;
     }
 
     if (!this.validateCustomLogicNumbers()) {
-      customLogicInput.setCustomValidity("Veuillez utiliser les nombres correspondants aux filtres ajoutés !");
+      customLogicInput.setCustomValidity(this.langObj.wrongCustomLogicNumbersErrorMsg);
       customLogicInput.reportValidity();
       return;
     }
 
     if (!this.validateIfAllFilterRulesHasBeenUsed()) {
-      customLogicInput.setCustomValidity(
-        "Certains filtres ne sont pas utilisés, veuillez les utiliser ou les supprimer avant de réessayer !"
-      );
+      customLogicInput.setCustomValidity(this.langObj.unusedFilterRulesInCustomLogicErrorMsg);
       customLogicInput.reportValidity();
       return;
     }
@@ -305,23 +240,23 @@ export default class LwcSoqlGenerator extends LightningElement {
     return selectedFieldLabel;
   }
   getSelectedOperatorLabel(operator) {
-    const { label: operatorLabel } = this.operatorOptions.find(({ value }) => value === operator);
+    const { label: operatorLabel } = this.operatorPicklistOptions.find(({ value }) => value === operator);
     return operatorLabel;
   }
   getFilterRule() {
     let value;
     switch (this.selectedFieldType) {
       case "DATE":
-        value = this.getFormattedDate(new Date(this.value));
+        value = getFormattedDate(new Date(this.value));
         break;
       case "DATETIME":
-        value = this.getFormattedDateTime(new Date(this.value));
+        value = getFormattedDateTime(new Date(this.value));
         break;
       case "TIME":
-        value = this.getFormattedTime(this.value);
+        value = getFormattedTime(this.value);
         break;
       case "BOOLEAN":
-        value = this.value === "true" ? "vrai" : "faux";
+        value = this.value === "true" ? this.booleanOptions[0].label : this.booleanOptions[1].label;
         break;
       default:
         value = this.value;
@@ -338,7 +273,7 @@ export default class LwcSoqlGenerator extends LightningElement {
       return `${this.selectedField} ${this.selectedOperator} ${this.value}Z`;
     }
     if (this.selectedFieldType === "MULTIPICKLIST") {
-      const { multipicklistOperatorSymbol } = operatorOptions.find(
+      const { multipicklistOperatorSymbol } = this.operatorOptions.find(
         ({ operatorSymbol }) => operatorSymbol === this.selectedOperator
       );
       return `${this.selectedField} ${multipicklistOperatorSymbol.replace("KEY", this.value.join(";"))}`;
@@ -350,22 +285,6 @@ export default class LwcSoqlGenerator extends LightningElement {
     const isWithoutQuotes = this.isWithoutQuotes(this.selectedFieldType);
     return `${this.selectedField} ${this.selectedOperator} ${isWithoutQuotes ? this.value : `'${this.value}'`}`;
   }
-  getFormattedDate(date) {
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${date.getFullYear()}`;
-  }
-  getFormattedDateTime(dateTime) {
-    return `${dateTime.getDate().toString().padStart(2, "0")}/${(dateTime.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${dateTime.getFullYear()} ${dateTime.getHours().toString().padStart(2, "0")}:${dateTime
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-  }
-  getFormattedTime(time) {
-    return time.substring(0, time.lastIndexOf(":"));
-  }
 
   getCustomLogicNumbers() {
     let customLogic = this.customLogic;
@@ -373,10 +292,10 @@ export default class LwcSoqlGenerator extends LightningElement {
     const customLogicNumbers = [];
     let customLogicNumber = "";
     for (let i = 0; i < customLogic.length; i++) {
-      if (this.isValidExpressionNum(customLogic.charAt(i))) {
+      if (isValidExpressionNum(customLogic.charAt(i))) {
         customLogicNumber += customLogic.charAt(i);
       }
-      if (customLogicNumber && !this.isValidExpressionNum(customLogic.charAt(i + 1))) {
+      if (customLogicNumber && !isValidExpressionNum(customLogic.charAt(i + 1))) {
         customLogicNumbers.push(customLogicNumber);
         customLogicNumber = "";
       }
@@ -391,11 +310,11 @@ export default class LwcSoqlGenerator extends LightningElement {
     let startIndex = -1;
     let endIndex = -1;
     for (let i = 0; i < customLogic.length; i++) {
-      if (this.isValidExpressionNum(customLogic.charAt(i))) {
+      if (isValidExpressionNum(customLogic.charAt(i))) {
         startIndex === -1 && (startIndex = i);
         customLogicNumber += customLogic.charAt(i);
       }
-      if (customLogicNumber && !this.isValidExpressionNum(customLogic.charAt(i + 1))) {
+      if (customLogicNumber && !isValidExpressionNum(customLogic.charAt(i + 1))) {
         endIndex = i;
         customWhereClause.splice(startIndex, startIndex - endIndex + 1, this.whereClauseRules[+customLogicNumber - 1]);
         startIndex = -1;
@@ -404,10 +323,15 @@ export default class LwcSoqlGenerator extends LightningElement {
     }
     return customWhereClause.join("");
   }
-  validateInputs() {
-    const ruleInputs = this.template.querySelectorAll(".filter__rule-input");
-    return Array.from(ruleInputs).reduce((validSoFar, curr) => validSoFar && curr.reportValidity(), true);
+
+  loadLangObject() {
+    if (["en", "fr"].includes(this.lang)) {
+      this.langObj = SUPPORTED_LANGUAGES[this.lang];
+    } else {
+      this.langObj = SUPPORTED_LANGUAGES.en;
+    }
   }
+
   validateCustomLogicExpression() {
     let customLogic = this.customLogic.replaceAll("AND", "&&").replaceAll("OR", "||");
     for (let i = this.filterRules.length; i > 0; i--) {
@@ -438,17 +362,7 @@ export default class LwcSoqlGenerator extends LightningElement {
   }
 
   isWithoutQuotes(field) {
-    return withoutQuotesFields.includes(field);
-  }
-
-  setFilterRulesIndexes() {
-    this.filterRules = this.filterRules.map((filterRule, index) => ({
-      ...filterRule,
-      index: index + 1
-    }));
-  }
-  isValidExpressionNum(num) {
-    return ![NaN, 0].includes(+num);
+    return WITHOUT_QUOTES_TYPES.includes(field);
   }
 
   fireOnSearchEvent(query) {

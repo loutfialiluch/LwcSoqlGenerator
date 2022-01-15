@@ -6,9 +6,8 @@
     <div class={filterRuleClass}>
       <lightning-combobox
         class="filter__rule-input"
-        name="progress"
-        label="Champ"
-        placeholder="Choisir un champ"
+        label={langObj.fieldInputLabel}
+        placeholder={langObj.fieldInputPlaceHolder}
         value={selectedField}
         options={fieldOptions}
         onchange={handleFieldChange}
@@ -16,11 +15,10 @@
       ></lightning-combobox>
       <lightning-combobox
         class="filter__rule-input"
-        name="progress"
-        label="Opérateur"
+        label={langObj.operatorInputLabel}
         value={selectedOperator}
-        placeholder="Choisir un opérateur"
-        options={operatorOptions}
+        placeholder={langObj.operatorInputPlaceHolder}
+        options={operatorPicklistOptions}
         onchange={handleOperatorChange}
         disabled={inputsDisabled}
         required="true"
@@ -29,7 +27,7 @@
         <lightning-input
           class="filter__rule-input"
           type="text"
-          label="Valeur"
+          label={langObj.valueInputLabel}
           disabled="true"
           required="true"
         ></lightning-input>
@@ -38,9 +36,9 @@
         <template if:true={isPickListField}>
           <lightning-combobox
             class="filter__rule-input"
-            label="Valeur"
+            label={langObj.valueInputLabel}
             placeholder="Choisir une valeur"
-            options={picklistOptions}
+            options={valuePicklistOptions}
             value={value}
             onchange={handleValueChange}
             required="true"
@@ -81,7 +79,7 @@
           <lightning-dual-listbox
             class="filter__rule-input"
             label="Choisir les valeurs"
-            options={picklistOptions}
+            options={valuePicklistOptions}
             onchange={handleValueChange}
             disable-reordering="true"
             required="true"
@@ -90,7 +88,7 @@
         <template if:true={isBooleanField}>
           <lightning-combobox
             class="filter__rule-input"
-            label="Valeur"
+            label={langObj.valueInputLabel}
             placeholder="Choisir une valeur"
             options={booleanOptions}
             value={value}
@@ -115,14 +113,17 @@
           <lightning-input
             class="filter__rule-input"
             type="text"
-            label="Valeur"
+            label={langObj.valueInputLabel}
             value={value}
             onchange={handleValueChange}
             required="true"
           ></lightning-input>
         </template>
       </template>
-      <button class="filter__rule-add-btn slds-button slds-button_brand" onclick={handleAddRule}>Ajouter</button>
+      <button class="filter__rule-add-btn slds-button slds-button_brand" onclick={handleAddRule}>
+        <lightning-icon icon-name="utility:add" size="xx-small" variant="inverse"></lightning-icon>
+        {langObj.addRuleBtnLabel}
+      </button>
     </div>
     <div class="filter__rules">
       <template for:each={filterRules} for:item="filterRule" for:index="index">
@@ -149,17 +150,19 @@
       </template>
     </div>
     <div if:true={shouldDisplayLogicSelector} class="filter__logic">
-      <label>Choisir la logique du filtre</label>
+      <label>{langObj.filterLogicInputLabel}</label>
       <lightning-radio-group
         variant="label-hidden"
         type="button"
-        options={logicOptions}
+        options={filterLogicOptions}
         value={selectedLogic}
         onchange={handleLogicChange}
       ></lightning-radio-group>
       <template if:true={isCustomLogic}>
         <div class="filter__logic-custom">
-          <label>Logique personnalisée<lightning-helptext content={customLogicHelpText}></lightning-helptext></label>
+          <label
+            >{langObj.customLogicInputLabel}<lightning-helptext content={customLogicHelpText}></lightning-helptext
+          ></label>
           <lightning-input
             data-custom-logic
             type="text"
@@ -173,9 +176,9 @@
       </template>
     </div>
     <div class="filter__footer">
-      <button class="slds-button slds-button_neutral" onclick={handleReset}>Réinitialiser</button>
+      <button class="slds-button slds-button_neutral" onclick={handleReset}>{langObj.resetBtnLabel}</button>
       <button class="slds-button slds-button_brand" onclick={handleSearch} disabled={shouldDisplaySearchBtn}>
-        Rechercher
+        {langObj.searchBtnLabel}
       </button>
     </div>
   </fieldset>

@@ -73,6 +73,13 @@
   font-weight: bold;
 }
 
+.filter__rule-add-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+}
+
 .filter__rules-delete-btn {
   cursor: pointer;
 }
@@ -101,6 +108,11 @@
   justify-content: flex-end;
   align-items: center;
   margin-top: 1rem;
+}
+
+.filter__footer button {
+  min-width: 104px;
+  font-weight: 500;
 }
 
 .filter__footer button:disabled {
